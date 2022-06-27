@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="ISO-8859-1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+		crossorigin="anonymous"></script>
+	<title>Implementation Exercise</title>
+</head>
+
+<body onload=showCategories(selectCategory),ShowNotes(true)>
+	<nav></nav>
+	<section class="row justify-content-around">
+		<div class="col-md-5">
+			<table class="table">
+				<tr>
+					<td>
+						<h1 id="txtTitle">My Notes</h1>
+					</td>
+					<td><button id="btNewNote" class="btn btn-primary my-1" data-bs-toggle="modal"
+							data-bs-target="#modalNote" onclick=showCategories(selectModalCategory)>Create Note</button>
+					</td>
+					<td><a id="txtArchiveUnarchive" href=""> > Archive Notes </a></td>
+				</tr>
+				<tr id="filter">
+					<td>
+						<h4>Category filter</h4>
+					</td>
+					<td>
+						<select class="my-1" id="selectCategory">
+							<option value="0">Select</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+			<div id="notes">
+
+			</div>
+		</div>
+
+	</section>
+	<div class="modal" id="modalNote" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+		aria-labelledby="staticBackdropLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="staticBackdropLabel">New note</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input id="noteId" type="hidden" value="">
+					<input id="noteUser" type="hidden" value="">
+					<label for="formGroupInput">Title*</label>
+					<input type="text" class="form-control" id="inpurModalTitle" required>
+					<label for="FormControlTextarea">Content</label>
+					<textarea class="form-control" id="textAreaModal" rows="5"></textarea>
+					<br>
+					<div class="input-group mb-3">
+						<div class="input-group-prepend">
+							<select id="selectModalCategory" class="btn btn-outline-secondary dropdown-toggle"
+								type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<option value="default" selected disabled hidden>Category</option>
+							</select>
+						</div>
+						<input id="inputModalNoteCategory" type="text" class="form-control"
+							aria-label="Text input with dropdown button" placeholder="" readonly>
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary" type="button"
+								id="btnModalResetCategory">Reset</button>
+						</div>
+					</div>
+					<div class="input-group mb-3">
+						<input id="inputModalNewCategory" type="text" class="form-control"
+							placeholder="Add new Category" aria-label="Recipient's category"
+							aria-describedby="basic-addon2">
+						<div class="input-group-append">
+							<button id="btnNewCategory" class="btn btn-outline-secondary" type="button">Add</button>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button id="modalClose" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button id="saveNote" type="button" class="btn btn-primary">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		let flag = false;
+		let categories = [];
+		const modal = document.getElementById("modalNote");
+		const notes = document.getElementById("notes");
+		const noteId = document.getElementById("noteId");
+		const noteUser = document.getElementById("noteUser");
+		const btnNewNote = document.getElementById("btNewNote");
+		const txtArchiveUnarchive = document.getElementById("txtArchiveUnarchive");
+		const selectCategory = document.getElementById("selectCategory");
+		const filter = document.getElementById("filter");
+		const modalTitle = document.getElementById("staticBackdropLabel");
+		const inpurModalTitle = document.getElementById("inpurModalTitle");
+		const textAreaModal = document.getElementById("textAreaModal");
+		const selectModalCategory = document.getElementById("selectModalCategory");
+		const inputModalNoteCategory = document.getElementById("inputModalNoteCategory");
+		const btnModalResetCategory = document.getElementById("btnModalResetCategory");
+		const inputModalNewCategory = document.getElementById("inputModalNewCategory");
+		const btnNewCategory = document.getElementById("btnNewCategory");
+		const saveNote = document.getElementById("saveNote");
+		const modalClose = document.getElementById("modalClose");
+
+		btnNewNote.addEventListener("click", () => {
+			inpurModalTitle.value="";
+			textAreaModal.value="";
+			inputModalNewCategory.value = "";
+			inputModalNewCategory.placeholder = "Add new Category";
+			btnModalResetCategory.click();
+			cleanSelect(selectModalCategory);
+			categories =[];
+		})
+
+		const addChild=(data)=>{
+			for(let note of (JSON.parse(data.target.response)).reverse()){
+					let txtbtnArchived="";
+					let node = document.createElement("ul");
+					node.innerHTML='<div class="input-group">' +
+						'<input type="text" class="form-control" aria-describedby="basic-addon2 id ="'+note.idNote+'" placeholder="'+note.title+'" readonly>'+
+						'<div class="input-group-append">'+
+						  '<button class="btn btn-outline-secondary" type="button" onclick=btnArchiveNote('+note.idNote+')>Archive/Unarchive</button>'+
+						  '<button class="btn btn-outline-secondary" type="button" onclick=btnEditNote('+note.idNote+') data-bs-toggle="modal"data-bs-target="#modalNote">Edit</button>'+
+						  '<button class="btn btn-outline-secondary" type="button" onclick=deleteAlert('+note.idNote+')>Delete</button>'+
+						'</div>'+
+					  '</div>';
+					notes.appendChild(node);
+				}
+		}
+
+		const ShowNotes = (flag) => {
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("GET", "http://localhost:8080/note/noteByStatus?bool=" + flag);
+			xhr.addEventListener("load", (data) => {
+				//console.log(JSON.parse(data.target.response));
+				addChild(data)
+			});
+			xhr.send();
+		}
+
+		txtArchiveUnarchive.addEventListener("click", (e) => {
+			e.preventDefault();
+			if (flag) {
+				notes.innerHTML="";
+				txtTitle.textContent = "My Notes";
+				txtArchiveUnarchive.textContent = " > Archive Notes";
+				ShowNotes(flag);
+				filter.hidden = false;
+				flag = false;
+			} else {
+				notes.innerHTML="";
+				txtTitle.textContent = "Archived notes";
+				txtArchiveUnarchive.textContent = "Go Back to unarchived notes";
+				ShowNotes(flag);
+				filter.hidden = true;
+				flag = true;
+			}
+		})
+
+		const showCategories = (select) => {
+			let fragment = document.createDocumentFragment();
+			let categories = [];
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("GET", "http://localhost:8080/category/list");
+			xhr.addEventListener("load", (data) => {
+				categories = JSON.parse(data.target.response);
+				for (let category of categories) {
+					let selectItem = document.createElement('OPTION')
+					selectItem.setAttribute("value", category.idCategory);
+					selectItem.textContent = category.nameCategory;
+					fragment.appendChild(selectItem);
+				}
+				select.appendChild(fragment);
+			});
+			xhr.send();
+		}
+
+		selectCategory.addEventListener("change", (e) => {
+			notes.innerHTML="";
+			if (event.target.value != 0) {
+				let xhr;
+				(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open("GET", "http://localhost:8080/noteCategory/findByCategory?id=" + event.target.value);
+				xhr.addEventListener("load", (data) => {
+					addChild(data);
+				});
+				xhr.send();
+			} else ShowNotes(true);
+		})
+
+		const btnArchiveNote=(idNote)=>{
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("PUT", "http://localhost:8080/note/archivedUnarchived?id="+idNote);
+			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			xhr.addEventListener("load",(data)=>{
+				notes.innerHTML="";
+				ShowNotes(!flag);
+			})
+			xhr.send();
+		}
+
+		const btnEditNote=(idNote)=>{
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("GET", "http://localhost:8080/note/noteById?id="+idNote);
+			xhr.addEventListener("load", (data) => {
+				let note = JSON.parse(data.target.response)
+				modalTitle.textContent="Edit note";
+				noteId.value = note.idNote;
+				inpurModalTitle.value = note.title;
+				textAreaModal.value = note.text;
+
+			});
+			xhr.send();
+
+			let xhr1;
+			(window.XMLHttpRequest) ? xhr1 = new XMLHttpRequest() : xrh1 = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr1.open("GET", "http://localhost:8080/noteCategory/findByNote?id="+idNote);
+			xhr1.addEventListener("load", (data) => {
+				let categories = JSON.parse(data.target.response);
+				for(let category of categories){
+					let tem =category.nameCategory;
+					inputModalNoteCategory.placeholder += `${tem} `;
+				}
+
+			});
+			xhr1.send();
+		}
+
+		const btnDeleteNote=(idNote)=>{
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("DELETE", "http://localhost:8080/note/delete?id="+idNote);
+			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			xhr.addEventListener("load",(data)=>{
+				notes.innerHTML="";
+				ShowNotes(!flag);
+			})
+			xhr.send();
+		}
+
+		const deleteAlert=(idNote)=>{
+			let confirmAction = confirm("Are you sure to execute this action?");
+        	if (confirmAction) {
+          		alert("Action successfully executed");
+				btnDeleteNote(idNote);
+        	} else {
+          		alert("Action canceled");
+        	}
+		}
+
+		btnModalResetCategory.addEventListener("click", () => {
+			inputModalNoteCategory.placeholder = "";
+			selectModalCategory.value = "default";
+			categories = [];
+		})
+
+		selectModalCategory.addEventListener("change", (e) => {
+			let tem = selectModalCategory.options[selectModalCategory.selectedIndex].text;
+			inputModalNoteCategory.placeholder += `${tem} `;
+			categories.push(tem);
+			selectModalCategory.value = "default";
+		})
+
+		selectModalCategory.addEventListener("click",()=>{
+			cleanSelect(selectModalCategory);
+			showCategories(selectModalCategory);
+		})
+
+		const cleanSelect = (select) => {
+			for (let i = select.length; i >= 1; i--) {
+				select.remove(i);
+			};
+		}
+
+		btnNewCategory.addEventListener("click", () => {
+			cleanSelect(selectModalCategory);
+			if (inputModalNewCategory.value != "") {
+				let tem = inputModalNewCategory.value;
+				let xhr;
+				(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open("POST", "http://localhost:8080/category/add");
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.send(JSON.stringify({ "nameCategory": tem }));
+				inputModalNoteCategory.placeholder += `${tem} `;
+				categories.push(tem);
+				inputModalNewCategory.value = "";
+				inputModalNewCategory.placeholder = "Add new Category"
+				selectModalCategory.value = "default";
+			}
+		})
+
+		saveNote.addEventListener("click",()=>{
+			if(inpurModalTitle.value!=""){
+				if(modalTitle.textContent==="New note"){
+					let xhr;
+					let tem = inputModalNewCategory.value;
+					(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+					xhr.open("POST", "http://localhost:8080/note/add");
+					xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+					xhr.send(JSON.stringify({ "title": inpurModalTitle.value,
+											"text": textAreaModal.value,
+											"dateUpdate": dateTime(),
+											"status": true,
+											"user": 1 }));
+					if(inputModalNewCategory.placeholder!=""){
+						let xhr;
+						let tem = inputModalNewCategory.value;
+						(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+						xhr.open("POST", "http://localhost:8080/noteCategory/addNoteCategory");
+						xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+						xhr.send(JSON.stringify(categories));
+					}
+					window.location.reload();
+					notes.innerHTML="";
+					ShowNotes(!flag);
+					modalClose.click();
+				}else if(modalTitle.textContent==="Edit note"){
+					let xhr;
+					let tem = inputModalNewCategory.value;
+					(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+					xhr.open("PUT", "http://localhost:8080/note/updateNote");
+					xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+					xhr.send(JSON.stringify({"idNote": noteId.value,
+											"title": inpurModalTitle.value,
+											"text": textAreaModal.value,
+											"dateUpdate": dateTime(),
+											"status": true,
+											"user": 1 }));
+					if(inputModalNewCategory.placeholder!=""){
+						let xhr;
+						let tem = inputModalNewCategory.value;
+						(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+						xhr.open("POST", "http://localhost:8080/noteCategory/addNoteCategory");
+						xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+						xhr.send(JSON.stringify(categories));
+					}
+					window.location.reload();
+					notes.innerHTML="";
+					ShowNotes(!flag);
+					modalClose.click();
+				}
+			}else{
+				window.alert("Required title");
+			}
+		})
+
+		modalClose.addEventListener("click",()=>{
+			cleanSelect(selectCategory);
+			showCategories(selectCategory);
+		})
+
+		const dateTime = ()=>{
+			let timeElapsed = Date.now();
+			let today = new Date(timeElapsed);
+			return today.toISOString();
+		}
+	</script>
+
+</body>
+
+</html>

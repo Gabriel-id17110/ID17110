@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="ISO-8859-1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+		crossorigin="anonymous"></script>
+	<title>Implementation Exercise</title>
+</head>
+
+<body onload=showCategories(selectCategory)>
+	<nav></nav>
+	<section class="row justify-content-around">
+		<div class="col-md-5">
+			<table class="table">
+				<tr>
+					<td>
+						<h1 id="txtTitle">My Notes</h1>
+					</td>
+					<td><button id="btNewNote" class="btn btn-primary my-1" data-bs-toggle="modal"
+							data-bs-target="#modalNote" onclick=showCategories(selectModalCategory)>Create Note</button>
+					</td>
+					<td><a id="txtArchiveUnarchive" href=""> > Archive Notes </a></td>
+				</tr>
+				<tr id="filter">
+					<td>
+						<h4>Category filter</h4>
+					</td>
+					<td>
+						<select class="my-1" id="selectCategory">
+							<option value="0">Select</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+
+		</div>
+	</section>
+	<div class="modal" id="modalNote" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+		aria-labelledby="staticBackdropLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="staticBackdropLabel">New note</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<label for="formGroupInput">Title*</label>
+					<input type="text" class="form-control" id="inpurModalTitle" required>
+					<label for="FormControlTextarea">Content</label>
+					<textarea class="form-control" id="textAreaModal" rows="5"></textarea>
+					<br>
+					<div class="input-group mb-3">
+						<div class="input-group-prepend">
+							<select id="selectModalCategory" class="btn btn-outline-secondary dropdown-toggle"
+								type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<option value="default" selected disabled hidden>Category</option>
+							</select>
+						</div>
+						<input id="inputModalNoteCategory" type="text" class="form-control"
+							aria-label="Text input with dropdown button" placeholder="" readonly>
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary" type="button"
+								id="btnModalResetCategory">Reset</button>
+						</div>
+					</div>
+					<div class="input-group mb-3">
+						<input id="inputModalNewCategory" type="text" class="form-control"
+							placeholder="Add new Category" aria-label="Recipient's category"
+							aria-describedby="basic-addon2">
+						<div class="input-group-append">
+							<button id="btnNewCategory" class="btn btn-outline-secondary" type="button">Add</button>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button id="modalClose" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button id="saveNote" type="button" class="btn btn-primary">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		let flag = false;
+		const btnNewNote = document.getElementById("btNewNote");
+		const txtArchiveUnarchive = document.getElementById("txtArchiveUnarchive");
+		const selectCategory = document.getElementById("selectCategory");
+		const filter = document.getElementById("filter");
+		const inpurModalTitle = document.getElementById("inpurModalTitle");
+		const textAreaModal = document.getElementById("textAreaModal");
+		const selectModalCategory = document.getElementById("selectModalCategory");
+		const inputModalNoteCategory = document.getElementById("inputModalNoteCategory");
+		const btnModalResetCategory = document.getElementById("btnModalResetCategory");
+		const inputModalNewCategory = document.getElementById("inputModalNewCategory");
+		const btnNewCategory = document.getElementById("btnNewCategory");
+		const saveNote = document.getElementById("saveNote");
+
+		btnNewNote.addEventListener("click", () => {
+			inpurModalTitle.value="";
+			textAreaModal.value="";
+			inputModalNewCategory.value = "";
+			inputModalNewCategory.placeholder = "Add new Category";
+			btnModalResetCategory.click();
+			cleanSelect(selectModalCategory);
+		})
+
+		const ShowNotes = (flag) => {
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("GET", "http://localhost:8080/note/noteByStatus?bool=" + flag);
+			xhr.addEventListener("load", (data) => {
+				console.log(JSON.parse(data.target.response));
+			});
+			xhr.send();
+		}
+
+		txtArchiveUnarchive.addEventListener("click", (e) => {
+			e.preventDefault();
+			if (flag) {
+				txtTitle.textContent = "My Notes";
+				txtArchiveUnarchive.textContent = " > Archive Notes";
+				ShowNotes(flag);
+				filter.hidden = false;
+				flag = false;
+			} else {
+				txtTitle.textContent = "Archived notes";
+				txtArchiveUnarchive.textContent = "Go Back to unarchived notes";
+				ShowNotes(flag);
+				filter.hidden = true;
+				flag = true;
+			}
+		})
+
+		const showCategories = (select) => {
+			let fragment = document.createDocumentFragment();
+			let categories = [];
+			let xhr;
+			(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+			xhr.open("GET", "http://localhost:8080/category/list");
+			xhr.addEventListener("load", (data) => {
+				categories = JSON.parse(data.target.response);
+				for (let category of categories) {
+					let selectItem = document.createElement('OPTION')
+					selectItem.setAttribute("value", category.idCategory);
+					selectItem.textContent = category.nameCategory;
+					fragment.appendChild(selectItem);
+				}
+				select.appendChild(fragment);
+			});
+			xhr.send();
+		}
+
+		selectCategory.addEventListener("change", (e) => {
+			if (event.target.value != 0) {
+				let xhr;
+				(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open("GET", "http://localhost:8080/noteCategory/findByCategory?id=" + event.target.value);
+				xhr.addEventListener("load", (data) => {
+					console.log(JSON.parse(data.target.response));
+				});
+				xhr.send();
+			} else ShowNotes(true);
+		})
+
+		btnModalResetCategory.addEventListener("click", () => {
+			inputModalNoteCategory.placeholder = "";
+			selectModalCategory.value = "default";
+		})
+
+		selectModalCategory.addEventListener("change", (e) => {
+			let tem = selectModalCategory.options[selectModalCategory.selectedIndex].text;
+			inputModalNoteCategory.placeholder += `${tem} `;
+		})
+
+		const cleanSelect = (select) => {
+			for (let i = select.length; i >= 1; i--) {
+				select.remove(i);
+			};
+
+		}
+
+		btnNewCategory.addEventListener("click", () => {
+			cleanSelect(selectModalCategory);
+			if (inputModalNewCategory.value != "") {
+				let xhr;
+				let tem = inputModalNewCategory.value;
+				(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open("POST", "http://localhost:8080/category/add");
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.send(JSON.stringify({ "nameCategory": tem }));
+				inputModalNoteCategory.placeholder += `${tem} `;
+				inputModalNewCategory.value = "";
+				inputModalNewCategory.placeholder = "Add new Category"
+				selectModalCategory.value = "default";
+			}
+			showCategories(selectModalCategory);
+		})
+
+		saveNote.addEventListener("click",()=>{
+			if(inpurModalTitle.value!=""){
+				let xhr;
+				let tem = inputModalNewCategory.value;
+				(window.XMLHttpRequest) ? xhr = new XMLHttpRequest() : xrh = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open("POST", "http://localhost:8080/note/add");
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.send(JSON.stringify({ "title": inpurModalTitle.value,
+        								  "text": textAreaModal.value,
+        								  "dateUpdate": dateTime(),
+        								  "status": true,
+        								  "user": 1 }));
+				modalClose.click();
+				if(inputModalNewCategory.value!=""){
+					
+				}
+
+			}else{
+				window.alert("Required title");
+			}
+		})
+
+		const dateTime = ()=>{
+			let timeElapsed = Date.now();
+			let today = new Date(timeElapsed);
+			return today.toISOString();
+		}
+	</script>
+
+</body>
+
+</html>
